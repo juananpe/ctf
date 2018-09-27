@@ -1,0 +1,67 @@
+require 'ERB'
+
+
+user='pepe'
+
+$group = ECDSA::Group::Secp256k1
+$private_key = 1 + SecureRandom.random_number($group.order - 1)
+$public_key = $group.generator.multiply_by_scalar($private_key)
+
+
+public_key_string = ECDSA::Format::PointOctetString.encode($public_key, compression: false)
+
+def bin_to_hex(s)
+  s.each_byte.map { |b| b.to_s(16) }.join
+end
+
+
+bin_to_hex(public_key_string)
+
+
+
+'only private
+30740201010420 2c360c5bac1457f6ba82b9c456bfab6b5ab4ff4dfb13f9fc7e10a742ab24430b a00706052b8104000a  | xxd -r -p >48101258.1
+
+
+' private and public 
+
+30740201010420
+
+2c360c5bac1457f6ba82b9c456bfab6b5ab4ff4dfb13f9fc7e10a742ab24430b
+
+a00706052b8104000aa144034200
+
+44367fd9975d45b63317acdce8249e23218d1ab601f9ccfc477a2c14392394cd9c1a548a6787223896a35e6585ad40d8242276702bd22a5329cc77a28b92db
+
+
+$ /usr/local/Cellar/openssl/1.0.2p/bin/openssl ec -inform d <48101258.1 -text -noout
+
+
+
+$ /usr/local/Cellar/openssl/1.0.2p/bin/openssl ec -inform d <48101258.2
+read EC key
+writing EC key
+-----BEGIN EC PRIVATE KEY-----
+MHQCAQEEICw2DFusFFf2uoK5xFa/q2tatP9N+xP5/H4Qp0KrJEMLoAcGBSuBBAAK
+oUQDQgAEIOptjOe8u0gzabKRHHXlYCo0KL5Elul/FK1S/UpqoONgg5xu2zIqIlV8
+cB7Q+h4Gz1dPvhe9aoVRacVllnLPqQ==
+-----END EC PRIVATE KEY-----
+
+
+
+
+
+
+
+
+k = OpenSSL::PKey::EC.new(File.read("/tmp/p.pem"))
+
+$private_key = k.private_key
+
+temp_key = user.size
+digest = Digest::SHA256.digest(str) 
+
+sig = ECDSA.sign($group, $private_key, digest, temp_key)
+
+signature = Base64.strict_encode64(user+"--"+ECDSA::Format::SignatureDerString.encode(sig))
+ERB::Util.url_encode(signature)
